@@ -729,6 +729,12 @@ public class SslConnection extends AbstractConnection implements Connection.Upgr
                                     return filled = -1;
 
                                 case BUFFER_UNDERFLOW:
+                                     if (BufferUtil.space(_encryptedInput) == 0)
+                                    {
+                                        BufferUtil.clear(_encryptedInput);
+                                        throw new SSLHandshakeException("Encrypted buffer max length exceeded");
+                                    }
+
                                     if (netFilled > 0)
                                         continue; // try filling some more
                                     _underflown = true;
@@ -739,7 +745,7 @@ public class SslConnection extends AbstractConnection implements Connection.Upgr
                                         {
                                             Throwable handshakeFailure = new SSLHandshakeException("Abruptly closed by peer");
                                             if (closeFailure != null)
-                                                handshakeFailure.initCause(closeFailure);
+                                                handshakeFailure.addSuppressed(closeFailure);
                                             throw handshakeFailure;
                                         }
                                         return filled = -1;
